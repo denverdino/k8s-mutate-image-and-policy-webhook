@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/sqooba/go-common/logging"
 	"testing"
+
+	"github.com/sqooba/go-common/logging"
 
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -713,4 +714,47 @@ func TestWithDifferentStorageClass(t *testing.T) {
 	assert.Equal(t, "replace", patches[0].Op)
 	assert.Equal(t, "/spec/storageClassName", patches[0].Path)
 	assert.Equal(t, storageClass1, patches[0].Value)
+}
+
+func TestImageWithRequiredRegistries(t *testing.T) {
+
+	wh := mutationWH{
+		registry:           "knative-dev-registry.cn-hangzhou.cr.aliyuncs.com",
+		requiredRegistries: []string{"gcr.io/knative-releases"},
+	}
+
+	pod := corev1.Pod{
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{Image: "gcr.io/knative-releases/knative.dev/eventing/cmd/mtbroker/filter:v0.1.0"},
+			},
+		},
+	}
+
+	patches, err := wh.applyMutationOnPod(pod)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(patches))
+	assert.Equal(t, "replace", patches[0].Op)
+	assert.Equal(t, "/spec/containers/0/image", patches[0].Path)
+	assert.Equal(t, "knative-dev-registry.cn-hangzhou.cr.aliyuncs.com/knative.dev/eventing/cmd/mtbroker/filter:v0.1.0", patches[0].Value)
+}
+
+func TestImageWithRequiredRegistries2(t *testing.T) {
+
+	wh := mutationWH{
+		registry:           "knative-dev-registry.cn-hangzhou.cr.aliyuncs.com",
+		requiredRegistries: []string{"gcr.io/knative-releases"},
+	}
+
+	pod := corev1.Pod{
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{Image: "registry.cn-hangzhou.aliyuncs.com/denverdino/k8s-mutate-image-and-policy-webhook:v3.3.2"},
+			},
+		},
+	}
+
+	patches, err := wh.applyMutationOnPod(pod)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(patches))
 }

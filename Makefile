@@ -1,4 +1,4 @@
-VERSION=v3.3.0
+VERSION=v3.3.3
 GOOS=linux
 GOCMD=go
 GOBUILD=$(GOCMD) build
@@ -10,8 +10,8 @@ PACKAGE_PLATFORM=$(BUILD_PLATFORM),linux/arm64,linux/arm/v7
 VERSION_MAJOR=$(shell echo $(VERSION) | cut -f1 -d.)
 VERSION_MINOR=$(shell echo $(VERSION) | cut -f2 -d.)
 BINARY_NAME=k8s-mutate-image-and-policy-webhook
-GO_PACKAGE=sqooba/k8s-mutate-image-and-policy-webhook
-DOCKER_REGISTRY=
+GO_PACKAGE=denverdino/k8s-mutate-image-and-policy-webhook
+DOCKER_REGISTRY=registry.cn-hangzhou.aliyuncs.com/
 GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_DIRTY=$(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 BUILD_DATE=$(shell date '+%Y-%m-%d-%H:%M:%S')
@@ -44,6 +44,9 @@ package:
 		-t ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR) \
 		--load --no-cache \
 		.
+	docker push ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION)
+	docker push ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR).$(VERSION_MINOR)
+	docker push ${DOCKER_REGISTRY}${GO_PACKAGE}:$(VERSION_MAJOR)
 
 test:
 	go test ./...

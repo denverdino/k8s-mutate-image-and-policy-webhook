@@ -2,10 +2,11 @@ package main
 
 import (
 	"flag"
+	"net/http"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/sqooba/go-common/logging"
 	"github.com/sqooba/go-common/version"
-	"net/http"
 )
 
 type envConfig struct {
@@ -19,6 +20,7 @@ type envConfig struct {
 	DefaultStorageClass  string   `envconfig:"DEFAULT_STORAGE_CLASS"`
 	ExcludeNamespaces    []string `envconfig:"EXCLUDE_NAMESPACES"`
 	IgnoredRegistries    []string `envconfig:"IGNORED_REGISTRIES"`
+	RequiredRegistries   []string `envconfig:"REQUIRED_REGISTRIES"`
 }
 
 var (
@@ -33,6 +35,7 @@ type mutationWH struct {
 	defaultStorageClass  string
 	excludedNamespaces   []string
 	ignoredRegistries    []string
+	requiredRegistries   []string
 }
 
 func main() {
@@ -61,6 +64,7 @@ func main() {
 		defaultStorageClass:  env.DefaultStorageClass,
 		excludedNamespaces:   env.ExcludeNamespaces,
 		ignoredRegistries:    env.IgnoredRegistries,
+		requiredRegistries:   env.RequiredRegistries,
 	}
 
 	mux := http.NewServeMux()

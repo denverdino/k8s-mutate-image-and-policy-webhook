@@ -18,7 +18,7 @@ pushd "certs"
 openssl req -days 730 -nodes -new -x509 \
   -keyout ca.key \
   -out ca.crt \
-  -subj "/CN=Sqooba k8s-mutate-image-and-policy-webhook CA" \
+  -subj "/CN=denverdino k8s-mutate-image-and-policy-webhook CA" \
 
 # Generate the private key for the webhook server
 openssl genrsa -out webhook-server-tls.key 2048
@@ -26,7 +26,6 @@ openssl genrsa -out webhook-server-tls.key 2048
 # Generate a Certificate Signing Request (CSR) for the private key, and sign it with the private key of the CA.
 openssl req -new -sha256 -key webhook-server-tls.key \
   -subj "/CN=k8s-mutate-image-and-policy-webhook.${NAMESPACE}.svc" \
-  -addext "subjectAltName = DNS:k8s-mutate-image-and-policy-webhook.${NAMESPACE}.svc" \
     | openssl x509 -req -days 730 \
        -extfile <(printf "subjectAltName=DNS:k8s-mutate-image-and-policy-webhook.${NAMESPACE}.svc") \
        -CA ca.crt -CAkey ca.key -CAcreateserial -out webhook-server-tls.crt
@@ -40,7 +39,8 @@ kubectl create secret generic k8s-mutate-image-and-policy-webhook-tls-certs -n $
 
 popd
 
-export CA_PEM_B64=$(cat certs/ca.crt | base64 -w0)
+export CA_PEM_B64=$(cat certs/ca.crt | base64 | tr -d '\n')
+echo $CA_PEM_B64
 
 cat deployment.yaml.tmpl | envsubst > generated/deployment.yaml
 

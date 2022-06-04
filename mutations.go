@@ -57,11 +57,11 @@ func (wh *mutationWH) applyMutationOnPod(pod corev1.Pod) ([]patchOperation, erro
 			for i, c := range pod.Spec.InitContainers {
 				log.Tracef("/spec/initContainers/%d/image = %s", i, c.Image)
 
-				if !containsAnyRegistry(c.Image, append(wh.ignoredRegistries, wh.registry)) {
+				if !containsAnyRegistry(c.Image, append(wh.ignoredRegistries, wh.registry)) && (len(wh.requiredRegistries) == 0 || containsAnyRegistry(c.Image, wh.requiredRegistries)) {
 					patches = append(patches, patchOperation{
 						Op:    "replace",
 						Path:  fmt.Sprintf("/spec/initContainers/%d/image", i),
-						Value: replaceRegistryIfSet(c.Image, wh.registry),
+						Value: replaceRegistryIfSet(c.Image, wh.requiredRegistries, wh.registry),
 					})
 				}
 			}
@@ -71,11 +71,11 @@ func (wh *mutationWH) applyMutationOnPod(pod corev1.Pod) ([]patchOperation, erro
 			for i, c := range pod.Spec.Containers {
 				log.Tracef("/spec/containers/%d/image = %s", i, c.Image)
 
-				if !containsAnyRegistry(c.Image, append(wh.ignoredRegistries, wh.registry)) {
+				if !containsAnyRegistry(c.Image, append(wh.ignoredRegistries, wh.registry)) && (len(wh.requiredRegistries) == 0 || containsAnyRegistry(c.Image, wh.requiredRegistries)) {
 					patches = append(patches, patchOperation{
 						Op:    "replace",
 						Path:  fmt.Sprintf("/spec/containers/%d/image", i),
-						Value: replaceRegistryIfSet(c.Image, wh.registry),
+						Value: replaceRegistryIfSet(c.Image, wh.requiredRegistries, wh.registry),
 					})
 				}
 			}
@@ -141,8 +141,13 @@ func (wh *mutationWH) applyMutationOnPod(pod corev1.Pod) ([]patchOperation, erro
 
 // replaceRegistryIfSet assumes the image format is a.b[:port]/c/d:e
 // if a.b is present, it is replaced by the registry given as argument.
-func replaceRegistryIfSet(image string, registry string) string {
+func replaceRegistryIfSet(image string, requiredRegistries []string, registry string) string {
 
+	for _, r := range requiredRegistries {
+		if isMatchedImage(image, r) {
+			return convertMatchedImage(image, r, registry)
+		}
+	}
 	imageParts := strings.Split(image, "/")
 
 	if len(imageParts) == 1 {

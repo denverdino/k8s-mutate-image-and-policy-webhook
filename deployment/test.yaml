@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mutatingwebhookpodtest
+spec:
+  containers:
+  - name: kn
+    image: gcr.io/knative-releases/knative.dev/client/cmd/kn
+    command:
+      - sleep
+      - "3600"

@@ -25,7 +25,8 @@ spec:
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-          - podAffinityTerm:
+          - weight: 100
+            podAffinityTerm:
               labelSelector:
                 matchExpressions:
                 - key: app
@@ -36,7 +37,8 @@ spec:
 #              topologyKey: topology.kubernetes.io/zone # uncomment to ensure HA at zone level
       containers:
       - name: webhook
-        image: docker.sqooba.io/sqooba/k8s-mutate-image-and-policy-webhook:v3
+        image: registry.cn-hangzhou.aliyuncs.com/denverdino/k8s-mutate-image-and-policy-webhook:v3.3.3
+        imagePullPolicy: Always
         ports:
         - containerPort: 8443
           name: webhook-api
@@ -52,7 +54,9 @@ spec:
           - name: PORT
             value: "8443"
           - name: REGISTRY
-            value: "docker.sqooba.io"
+            value: "knative-dev-registry.cn-hangzhou.cr.aliyuncs.com"
+          - name: REQUIRED_REGISTRIES
+            value: "gcr.io/knative-releases"
 # Optional, don't set any value if you don't want to rewrite the imagePullSecrets property.
 #          - name: IMAGE_PULL_SECRET
 #            value: "sqooba-registry"
